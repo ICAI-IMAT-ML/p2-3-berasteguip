@@ -2,7 +2,7 @@
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+from sklearn.linear_model import LinearRegression
 
 class LinearRegressor:
     """
@@ -35,9 +35,11 @@ class LinearRegressor:
         if np.ndim(X) > 1:
             X = X.reshape(1, -1)
 
-        # TODO: Train linear regression model with only one coefficient
-        self.coefficients = None
-        self.intercept = None
+        X_mean = np.mean(X)
+        y_mean = np.mean(y)
+
+        self.coefficients = np.cov(X, y, ddof=0)[0, 1] / np.var(X)
+        self.intercept = y_mean - X_mean * self.coefficients
 
     # This part of the model you will only need for the last part of the notebook
     def fit_multiple(self, X, y):
@@ -54,9 +56,14 @@ class LinearRegressor:
         Returns:
             None: Modifies the model's coefficients and intercept in-place.
         """
-        # TODO: Train linear regression model with multiple coefficients
-        self.intercept = None
-        self.coefficients = None
+        
+        X = np.c_[np.ones(X.shape[0]), X]
+        Xt = np.transpose(X)
+
+        beta = np.linalg.inv(Xt @ X) @ Xt @ y
+
+        self.intercept = beta[0]
+        self.coefficients = beta[1:]
 
     def predict(self, X):
         """
@@ -75,11 +82,9 @@ class LinearRegressor:
             raise ValueError("Model is not yet fitted")
 
         if np.ndim(X) == 1:
-            # TODO: Predict when X is only one variable
-            predictions = None
+            predictions = self.intercept + self.coefficients * X
         else:
-            # TODO: Predict when X is more than one variable
-            predictions = None
+            predictions = self.intercept + X @ self.coefficients
         return predictions
 
 
@@ -94,17 +99,19 @@ def evaluate_regression(y_true, y_pred):
     Returns:
         dict: A dictionary containing the R^2, RMSE, and MAE values.
     """
+    n = len(y_true)    
+    
     # R^2 Score
-    # TODO: Calculate R^2
-    r_squared = None
+    rss = sum([(y_true[i] - y_pred[i])**2 for i in range(n)])
+    tss = sum([(y_true[i] - np.mean(y_true))**2 for i in range(n)])
+
+    r_squared = 1 - (rss / tss)
 
     # Root Mean Squared Error
-    # TODO: Calculate RMSE
-    rmse = None
+    rmse = np.sqrt(sum([(y_true[i] - y_pred[i])**2 for i in range(n)]) / n)
 
     # Mean Absolute Error
-    # TODO: Calculate MAE
-    mae = None
+    mae = sum([abs(y_true[i] - y_pred[i]) for i in range(n)]) / n
 
     return {"R2": r_squared, "RMSE": rmse, "MAE": mae}
 
@@ -114,15 +121,14 @@ def evaluate_regression(y_true, y_pred):
 
 def sklearn_comparison(x, y, linreg):
     ### Compare your model with sklearn linear regression model
-    # TODO : Import Linear regression from sklearn
 
     # Assuming your data is stored in x and y
     # TODO : Reshape x to be a 2D array, as scikit-learn expects 2D inputs for the features
-    x_reshaped = None
+    x_reshaped = x.reshape(-1, 1)
 
     # Create and train the scikit-learn model
     # TODO : Train the LinearRegression model
-    sklearn_model = None
+    sklearn_model = LinearRegression()
     sklearn_model.fit(x_reshaped, y)
 
     # Now, you can compare coefficients and intercepts between your model and scikit-learn's model
