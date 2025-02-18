@@ -185,7 +185,7 @@ def anscombe_quartet():
         results["RMSE"].append(evaluation_metrics["RMSE"])
         results["MAE"].append(evaluation_metrics["MAE"])
 
-    return anscombe, dataset, models, results
+    return anscombe, datasets, models, results
 
 
 # Go to the notebook to visualize the results
